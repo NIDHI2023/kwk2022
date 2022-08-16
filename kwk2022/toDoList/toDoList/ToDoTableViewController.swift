@@ -9,22 +9,35 @@ import UIKit
 
 class ToDoTableViewController: UITableViewController {
 
-    var listOfToDo : [ToDoClass] = []
+    var listOfToDo : [ToDoCD] = []
     
-    func createToDo() -> [ToDoClass]{
-        let swiftToDo = ToDoClass()
-        swiftToDo.description = "Learn Swift"
-        swiftToDo.important = true
+//    func createToDo() -> [ToDoClass]{
+//        let swiftToDo = ToDoClass()
+//        swiftToDo.description = "Learn Swift"
+//        swiftToDo.important = true
+//
+//        let dogToDo = ToDoClass()
+//        dogToDo.description = "Walk the Dog"
+//
+//        return [swiftToDo, dogToDo]
+//    }
+    
+    func getToDos() {
+        if let accessToCoreData = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext {
+            
         
-        let dogToDo = ToDoClass()
-        dogToDo.description = "Walk the Dog"
         
-        return [swiftToDo, dogToDo]
+        if let dataFromCoreData = try? accessToCoreData.fetch(ToDoCD.fetchRequest()) as? [ToDoCD] {
+            listOfToDo = dataFromCoreData
+            tableView.reloadData()
+        }
+        }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        listOfToDo = createToDo()
+        
+        //listOfToDo = createToDo()
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
@@ -47,10 +60,13 @@ class ToDoTableViewController: UITableViewController {
         let eachToDo = listOfToDo[indexPath.row]
         
         //if it's important then it gets an emoji
-        if eachToDo.important {
-            cell.textLabel?.text = "🤨" +  eachToDo.description //unwrapping whatev you have in the class (ex: "Learn Swift") and putting it into the cell
-        } else {
-            cell.textLabel?.text = eachToDo.description
+        
+        if let thereIsDescription = eachToDo.descriptionInCD {
+            if eachToDo.importantInCD {
+                cell.textLabel?.text = "🤨" +  thereIsDescription //unwrapping whatev you have in the class (ex: "Learn Swift") and putting it into the cell
+            } else {
+                cell.textLabel?.text = eachToDo.descriptionInCD
+            }
         }
         
         
@@ -66,6 +82,9 @@ class ToDoTableViewController: UITableViewController {
         performSegue(withIdentifier: "moveToCompletedToDoVC", sender: eachToDo)
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        getToDos()
+    }
 
     
     // MARK: - Navigation
@@ -76,7 +95,7 @@ class ToDoTableViewController: UITableViewController {
             nextAddToDoVC.previousToDoTVC = self
         }
         if let nextCompletedToDoVC = segue.destination as? CompletedToDoViewController {
-            if let choosenToDo = sender as? ToDoClass {
+            if let choosenToDo = sender as? ToDoCD {
                 nextCompletedToDoVC.selectedToDo = choosenToDo
                 nextCompletedToDoVC.previoustoDoTVC = self
             }
